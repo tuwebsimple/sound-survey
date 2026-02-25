@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Survey — Confidential</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
+
+  :root {
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --accent: #c8f54a;
+    --accent-dim: rgba(200,245,74,0.10);
+    --text: #e8e8e8;
+    --text-muted: #555;
+    --text-dim: #2e2e2e;
+    --danger: #ff4444;
+    --star-empty: #252525;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, .track-name, .res-name { -webkit-user-select: text; user-select: text; }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── LOADING ─── */
+  #loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 16px;
+  }
+  .loading-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1s infinite;
+  }
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ─── LOGIN ─── */
+  #login-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .login-box {
+    width: 360px;
+    padding: 48px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .brand {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .login-title {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .login-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+  .login-label {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.25em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .login-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    letter-spacing: 0.5em;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .login-input.error {
+    border-color: var(--danger);
+    animation: shake 0.35s ease;
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%,60%{transform:translateX(-7px)}
+    40%,80%{transform:translateX(7px)}
+  }
+  .login-btn {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--accent);
+    color: #080808;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .login-btn:hover { opacity: 0.85; }
+  .login-btn:active { transform: scale(0.98); }
+  .login-error {
+    margin-top: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--danger);
+    letter-spacing: 0.05em;
+    text-align: center;
+    min-height: 18px;
+  }
+  .confidential-tag {
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .confidential-tag::before, .confidential-tag::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── APP ─── */
+  #app-screen { display: none; }
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,8,8,0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app-brand {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .app-brand b { color: var(--accent); font-weight: 700; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .progress-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+  .progress-pill span { color: var(--accent); }
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .app-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 100px;
+  }
+
+  /* ─── INTRO ─── */
+  .survey-intro { margin-bottom: 52px; }
+  .intro-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .intro-title {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin-bottom: 16px;
+  }
+  .intro-title em { color: var(--accent); font-style: normal; }
+  .intro-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 300;
+    line-height: 1.65;
+    max-width: 440px;
+  }
+
+  /* ─── TRACK CARDS ─── */
+  .tracks-list { display: flex; flex-direction: column; gap: 3px; }
+  .track-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.3s;
+  }
+  .track-card.rated { border-color: #1f3000; }
+  .track-inner { padding: 22px 28px; }
+  .track-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .track-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    min-width: 28px;
+  }
+  .track-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    flex: 1;
+  }
+  .rated-check {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .track-card.rated .rated-check { opacity: 1; }
+
+  /* ─── PLAYERS ─── */
+  .players-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .player-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .player {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color 0.2s;
+  }
+  .player.active-player { border-color: rgba(200,245,74,0.25); }
+  .player.unavailable { opacity: 0.25; pointer-events: none; }
+  .player.loading-audio { opacity: 0.6; }
+
+  .play-btn {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .play-btn:hover { opacity: 0.8; }
+  .play-btn:active { transform: scale(0.92); }
+  .play-btn svg { width: 10px; height: 10px; fill: #080808; }
+
+  .prog-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    cursor: pointer;
+    position: relative;
+  }
+  .prog-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    pointer-events: none;
+    transition: width 0.08s linear;
+  }
+  .time-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ─── STARS ─── */
+  .rating-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .rating-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .stars { display: flex; gap: 4px; }
+  .star {
+    width: 34px; height: 34px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s;
+  }
+  .star:hover { transform: scale(1.18); }
+  .star:active { transform: scale(0.88); }
+  .star svg { width: 22px; height: 22px; fill: var(--star-empty); transition: fill 0.12s; }
+  .star.hov svg { fill: rgba(200,245,74,0.35); }
+  .star.on svg { fill: var(--accent); }
+  .rating-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .rating-num.show { opacity: 1; }
+
+  /* ─── SUBMIT ─── */
+  .submit-zone {
+    margin-top: 52px;
+    padding: 32px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .submit-left { flex: 1; min-width: 180px; }
+  .submit-progress-bar {
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .submit-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .submit-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+  }
+  .submit-count b { color: var(--accent); }
+
+  .jurado-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 200px;
+  }
+  .jurado-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .jurado-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-user-select: text;
+    user-select: text;
+    width: 100%;
+  }
+  .jurado-input:focus { border-color: var(--accent); }
+  .jurado-input::placeholder { color: var(--text-dim); }
+
+  .submit-btn {
+    background: var(--accent);
+    border: none;
+    color: #080808;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 18px 36px;
+    cursor: pointer;
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .submit-btn.ready { opacity: 1; pointer-events: all; }
+  .submit-btn.sending { opacity: 0.6; pointer-events: none; }
+  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:active { transform: scale(0.97); }
+
+  /* ─── RESULTS ─── */
+  #results-screen { display: none; }
+  .results-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 52px 24px 80px;
+  }
+  .results-title {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin-bottom: 12px;
+  }
+  .results-title em { color: var(--accent); font-style: normal; }
+  .results-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 300;
+    margin-bottom: 48px;
+  }
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 40px;
+  }
+  .result-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .res-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 30px;
+  }
+  .res-name { flex: 1; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .res-stars { display: flex; gap: 3px; }
+  .res-star svg { width: 14px; height: 14px; }
+  .res-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 18px;
+    text-align: right;
+  }
+  .results-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .action-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── DRIVE WARNING ─── */
+  .drive-warning {
+    background: rgba(200,245,74,0.06);
+    border: 1px solid rgba(200,245,74,0.2);
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(200,245,74,0.7);
+    letter-spacing: 0.1em;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .drive-warning.visible { display: flex; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 620px) {
+    .app-header { padding: 14px 20px; }
+    .app-body { padding: 32px 16px 80px; }
+    .intro-title { font-size: 36px; }
+    .players-row { grid-template-columns: 1fr; }
+    .track-inner { padding: 18px 18px; }
+    .submit-zone { flex-direction: column; align-items: stretch; }
+    .login-box { width: calc(100% - 40px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-dot"></div>
+  <div class="loading-text">Cargando...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand">Sound Survey</div>
+    <h2 class="login-title">Acceso<br>Privado</h2>
+    <p class="login-sub">Material inédito y confidencial.<br>Acceso restringido.</p>
+    <label class="login-label" for="pwd">Contraseña de acceso</label>
+    <input class="login-input" type="password" id="pwd" maxlength="8" autocomplete="off" placeholder="· · ·">
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="confidential-tag">Confidencial</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header class="app-header">
+    <div class="app-brand">Sound <b>Survey</b></div>
+    <div class="header-right">
+      <div class="progress-pill" id="hdr-progress"><span>0</span> / 15</div>
+      <button class="logout-btn" onclick="logout()">Salir</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <div class="survey-intro">
+      <div class="intro-eyebrow">Evaluación de material inédito</div>
+      <h1 class="intro-title">Escucha.<br><em>Califica.</em></h1>
+      <p class="intro-desc">15 tracks inéditos. Cada uno tiene hasta 2 fragmentos de 30 segundos. Escucha y califica del 1 al 5.</p>
+    </div>
+
+    <!-- Aviso Drive si hay problema de cookies -->
+    <div class="drive-warning" id="drive-warning">
+      ⚠ Si el audio no carga, abre drive.google.com en esta misma sesión del navegador.
+    </div>
+
+    <div class="tracks-list" id="tracks-list"></div>
+
+    <div class="submit-zone">
+      <div class="submit-left">
+        <div class="submit-progress-bar">
+          <div class="submit-progress-fill" id="submit-fill"></div>
+        </div>
+        <div class="submit-count" id="submit-count">
+          <b>0</b> de 15 tracks calificados
+        </div>
+      </div>
+      <div class="jurado-field">
+        <label class="jurado-label" for="jurado-input">Tu nombre</label>
+        <input class="jurado-input" type="text" id="jurado-input"
+          placeholder="Escribe tu nombre..." autocomplete="off" maxlength="60">
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="submitSurvey()">
+        Enviar Evaluación →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results-screen">
+  <header class="app-header">
+    <div class="app-brand">Sound <b>Survey</b></div>
+    <div class="header-right">
+      <button class="logout-btn" onclick="logout()">Nueva sesión</button>
+    </div>
+  </header>
+  <div class="results-body">
+    <h1 class="results-title">Evaluación<br><em>Completada</em></h1>
+    <p class="results-sub" id="results-sub">Tus calificaciones han sido registradas. Gracias.</p>
+    <div class="results-list" id="results-list"></div>
+    <div class="results-actions">
+      <button class="action-btn" onclick="copyResults()">Copiar resultados</button>
+      <button class="action-btn" onclick="logout()">Nueva sesión</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════
+const PASSWORD  = '444';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzvoTJqvouWXk5UJjkhEln1wvvxHrM4jcURktTo-KfHz6iZ_qD9giByqvcvNOkQmjZBpQ/exec';
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let tracks      = [];
+let ratings     = [];
+let audios      = [];   // Audio[][]
+let activeAudio = null;
+let activeKey   = null;
+let audioErrorCount = 0;
+
+// ═══════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('tracks.json?' + Date.now());
+    if (!res.ok) throw new Error('No se pudo cargar tracks.json');
+    tracks  = await res.json();
+    ratings = new Array(tracks.length).fill(0);
+    audios  = tracks.map(() => [null, null]);
+
+    show('loading-screen', false);
+    show('login-screen', 'flex');
+    document.getElementById('pwd').focus();
+  } catch(e) {
+    document.querySelector('#loading-screen .loading-text').textContent = 'Error: ' + e.message;
+  }
+});
+
+// ═══════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && isVisible('login-screen')) doLogin();
+});
+
+function doLogin() {
+  const val = document.getElementById('pwd').value.trim();
+  const inp = document.getElementById('pwd');
+  const err = document.getElementById('login-error');
+
+  if (val === PASSWORD) {
+    show('login-screen', false);
+    show('app-screen', 'block');
+    buildTracks();
+  } else {
+    inp.classList.add('error');
+    inp.value = '';
+    err.textContent = 'Contraseña incorrecta.';
+    setTimeout(() => { inp.classList.remove('error'); err.textContent = ''; inp.focus(); }, 1400);
+  }
+}
+
+function logout() { location.reload(); }
+
+// ═══════════════════════════════════════
+//  BUILD TRACKS
+// ═══════════════════════════════════════
+function buildTracks() {
+  const list = document.getElementById('tracks-list');
+  list.innerHTML = '';
+
+  tracks.forEach((track, t) => {
+    const card = document.createElement('div');
+    card.className = 'track-card';
+    card.id = `card-${t}`;
+
+    const playersHtml = [0, 1].map(f => {
+      const hasFrag = track.fragmentos && track.fragmentos[f];
+      return `
+        <div class="player-wrap">
+          <div class="player-tag">Fragmento ${f === 0 ? 'A' : 'B'}</div>
+          <div class="player ${hasFrag ? '' : 'unavailable'}" id="player-${t}-${f}">
+            <button class="play-btn" onclick="togglePlay(${t},${f})" id="playbtn-${t}-${f}">
+              ${iconPlay()}
+            </button>
+            <div class="prog-wrap" onclick="seekAudio(event,${t},${f})">
+              <div class="prog-fill" id="prog-${t}-${f}"></div>
+            </div>
+            <div class="time-lbl" id="time-${t}-${f}">—:——</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="track-inner">
+        <div class="track-head">
+          <div class="track-num">${String(t+1).padStart(2,'0')}</div>
+          <div class="track-name">${escHtml(track.name || 'Track ' + (t+1))}</div>
+          <div class="rated-check">✓ RATED</div>
+        </div>
+        <div class="players-row">${playersHtml}</div>
+        <div class="rating-row">
+          <div class="rating-lbl">Calificar</div>
+          <div class="stars" id="stars-${t}">
+            ${[1,2,3,4,5].map(s => `
+              <div class="star"
+                onmouseenter="hoverStars(${t},${s})"
+                onmouseleave="clearHover(${t})"
+                onclick="setRating(${t},${s})">
+                ${iconStar()}
+              </div>`).join('')}
+          </div>
+          <div class="rating-num" id="rval-${t}">—</div>
+        </div>
+      </div>`;
+
+    list.appendChild(card);
+
+    // Init audio for fragments that have a URL
+    [0, 1].forEach(f => {
+      const src = track.fragmentos && track.fragmentos[f];
+      if (src) initAudio(t, f, src);
+    });
+  });
+
+  updateProgress();
+}
+
+// ═══════════════════════════════════════
+//  AUDIO — Google Drive streaming
+// ═══════════════════════════════════════
+function initAudio(t, f, src) {
+  const audio = new Audio();
+  audio.crossOrigin = 'anonymous';
+  audio.preload = 'none'; // lazy — only load when user hits play
+
+  audio.addEventListener('loadedmetadata', () => {
+    const el = document.getElementById(`time-${t}-${f}`);
+    if (el) el.textContent = fmt(audio.duration);
+    document.getElementById(`player-${t}-${f}`)?.classList.remove('loading-audio');
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    const prog = document.getElementById(`prog-${t}-${f}`);
+    const time = document.getElementById(`time-${t}-${f}`);
+    if (prog) prog.style.width = pct + '%';
+    if (time) time.textContent = fmt(audio.currentTime);
+  });
+
+  audio.addEventListener('ended', () => {
+    audio._playing = false;
+    setIcon(t, f, false);
+    const prog = document.getElementById(`prog-${t}-${f}`);
+    if (prog) prog.style.width = '0%';
+    document.getElementById(`player-${t}-${f}`)?.classList.remove('active-player');
+  });
+
+  audio.addEventListener('error', () => {
+    audio._playing = false;
+    setIcon(t, f, false);
+    const player = document.getElementById(`player-${t}-${f}`);
+    if (player) {
+      player.classList.remove('loading-audio', 'active-player');
+      player.classList.add('unavailable');
+    }
+    const time = document.getElementById(`time-${t}-${f}`);
+    if (time) time.textContent = 'N/A';
+    audioErrorCount++;
+    if (audioErrorCount >= 2) {
+      document.getElementById('drive-warning')?.classList.add('visible');
+    }
+  });
+
+  // Use Drive streaming URL
+  audio.src = src;
+  audios[t][f] = audio;
+}
+
+function togglePlay(t, f) {
+  const audio = audios[t][f];
+  if (!audio) return;
+  const key = `${t}-${f}`;
+  const player = document.getElementById(`player-${t}-${f}`);
+
+  if (audio._playing) {
+    audio.pause();
+    audio._playing = false;
+    setIcon(t, f, false);
+    player?.classList.remove('active-player');
+  } else {
+    // Stop current
+    if (activeAudio && activeAudio !== audio) {
+      activeAudio.pause();
+      activeAudio._playing = false;
+      if (activeKey) {
+        const [at, af] = activeKey.split('-').map(Number);
+        setIcon(at, af, false);
+        document.getElementById(`player-${at}-${af}`)?.classList.remove('active-player');
+      }
+    }
+    // Show loading state
+    player?.classList.add('loading-audio');
+    audio.play()
+      .then(() => { player?.classList.remove('loading-audio'); })
+      .catch(() => { player?.classList.remove('loading-audio'); });
+    audio._playing = true;
+    activeAudio = audio;
+    activeKey = key;
+    setIcon(t, f, true);
+    player?.classList.add('active-player');
+  }
+}
+
+function seekAudio(e, t, f) {
+  const audio = audios[t][f];
+  if (!audio || !audio.duration) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  audio.currentTime = pct * audio.duration;
+}
+
+function setIcon(t, f, playing) {
+  const btn = document.getElementById(`playbtn-${t}-${f}`);
+  if (btn) btn.innerHTML = playing ? iconPause() : iconPlay();
+}
+
+function fmt(s) {
+  if (!s || isNaN(s)) return '0:00';
+  return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════
+//  STARS
+// ═══════════════════════════════════════
+function hoverStars(t, n) {
+  document.querySelectorAll(`#stars-${t} .star`).forEach((s,i) => {
+    s.classList.toggle('hov', i < n && ratings[t] === 0);
+  });
+}
+function clearHover(t) {
+  document.querySelectorAll(`#stars-${t} .star`).forEach(s => s.classList.remove('hov'));
+}
+function setRating(t, n) {
+  ratings[t] = n;
+  document.querySelectorAll(`#stars-${t} .star`).forEach((s,i) => {
+    s.classList.remove('hov');
+    s.classList.toggle('on', i < n);
+  });
+  const rval = document.getElementById(`rval-${t}`);
+  rval.textContent = n;
+  rval.classList.add('show');
+  document.getElementById(`card-${t}`)?.classList.add('rated');
+  updateProgress();
+}
+
+// ═══════════════════════════════════════
+//  PROGRESS
+// ═══════════════════════════════════════
+function updateProgress() {
+  const rated = ratings.filter(r => r > 0).length;
+  const total = tracks.length;
+  document.getElementById('submit-fill').style.width = ((rated/total)*100) + '%';
+  document.getElementById('submit-count').innerHTML = `<b>${rated}</b> de ${total} tracks calificados`;
+  document.getElementById('hdr-progress').innerHTML = `<span>${rated}</span> / ${total}`;
+  document.getElementById('submit-btn').classList.toggle('ready', rated === total);
+}
+
+// ═══════════════════════════════════════
+//  SUBMIT + GOOGLE SHEETS
+// ═══════════════════════════════════════
+async function sendToSheets(jurado) {
+  const payload = {
+    jurado,
+    ratings: ratings.map((score, t) => ({
+      name: tracks[t]?.name || `Track ${t+1}`,
+      score
+    }))
+  };
+  await fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+function submitSurvey() {
+  if (ratings.filter(r => r > 0).length < tracks.length) return;
+  const jurado = (document.getElementById('jurado-input')?.value || '').trim() || 'Anónimo';
+  const btn = document.getElementById('submit-btn');
+  if (activeAudio) { activeAudio.pause(); activeAudio._playing = false; }
+
+  btn.textContent = 'Enviando...';
+  btn.classList.add('sending');
+
+  sendToSheets(jurado)
+    .catch(() => {})
+    .finally(() => showResults(jurado));
+}
+
+function showResults(jurado) {
+  show('app-screen', false);
+  show('results-screen', 'block');
+  document.getElementById('results-sub').textContent =
+    `Evaluación de ${jurado} registrada. Gracias.`;
+
+  const list = document.getElementById('results-list');
+  list.innerHTML = '';
+  ratings.forEach((r, t) => {
+    const name = tracks[t]?.name || `Track ${t+1}`;
+    const starsHtml = [1,2,3,4,5].map(s => `
+      <div class="res-star">
+        <svg viewBox="0 0 24 24" fill="${s<=r ? 'var(--accent)' : 'var(--star-empty)'}">
+          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+        </svg>
+      </div>`).join('');
+    const row = document.createElement('div');
+    row.className = 'result-row';
+    row.innerHTML = `
+      <div class="res-num">${String(t+1).padStart(2,'0')}</div>
+      <div class="res-name">${escHtml(name)}</div>
+      <div class="res-stars">${starsHtml}</div>
+      <div class="res-score">${r}/5</div>`;
+    list.appendChild(row);
+  });
+}
+
+function copyResults() {
+  let txt = 'SOUND SURVEY — Resultados\n' + '─'.repeat(36) + '\n';
+  ratings.forEach((r, t) => {
+    const name = tracks[t]?.name || `Track ${t+1}`;
+    txt += `${String(t+1).padStart(2,'0')}. ${name.padEnd(24)} ${'★'.repeat(r)}${'☆'.repeat(5-r)}  ${r}/5\n`;
+  });
+  txt += '─'.repeat(36) + '\n';
+  txt += `Promedio: ${(ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1)}/5\n`;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = event.target;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = 'Copiar resultados', 2000);
+  });
+}
+
+// ═══════════════════════════════════════
+//  ICONS + UTILS
+// ═══════════════════════════════════════
+function iconPlay()  { return `<svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>`; }
+function iconPause() { return `<svg viewBox="0 0 10 10"><rect x="1.5" y="1" width="2.5" height="8"/><rect x="6" y="1" width="2.5" height="8"/></svg>`; }
+function iconStar()  { return `<svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>`; }
+
+function show(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = val === false ? 'none' : (val || 'block');
+}
+function isVisible(id) {
+  const el = document.getElementById(id);
+  return el && el.style.display !== 'none';
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
