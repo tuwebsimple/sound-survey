@@ -3,27 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sound Survey — Confidential</title>
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<title>Sound Survey</title>
 <meta name="robots" content="noindex, nofollow">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@300;400;700;800&display=swap');
 
   :root {
-    --bg: #080808;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: #222222;
-    --accent: #c8f54a;
-    --accent-dim: rgba(200,245,74,0.10);
-    --text: #e8e8e8;
-    --text-muted: #555;
-    --text-dim: #2e2e2e;
-    --danger: #ff4444;
-    --star-empty: #252525;
+    --bg:          #080808;
+    --surface:     #0f0f0f;
+    --border:      #1e1e1e;
+    --border-hover:#2e2e2e;
+    --accent:      #c8f54a;
+    --accent-dim:  rgba(200,245,74,0.08);
+    --text:        #ececec;
+    --text-muted:  #626262;
+    --text-dim:    #282828;
+    --danger:      #ff4444;
+    --star-empty:  #1e1e1e;
+    --tiktok:      #fe2c55;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
 
   body {
     background: var(--bg);
@@ -33,974 +34,701 @@
     -webkit-font-smoothing: antialiased;
     -webkit-user-select: none;
     user-select: none;
+    font-size: 16px;
   }
 
-  input, .track-name, .res-name { -webkit-user-select: text; user-select: text; }
+  input, textarea, .track-name, .res-name {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 
   body::after {
     content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 9999;
   }
 
-  /* ─── LOADING ─── */
-  #loading-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 16px;
+  /* ─── SENDING OVERLAY ─── */
+  #sending-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(8,8,8,0.94);
+    z-index: 1000; flex-direction: column;
+    align-items: center; justify-content: center; gap: 24px;
+    backdrop-filter: blur(12px);
   }
-  .loading-dot {
-    width: 8px; height: 8px;
+  #sending-overlay.visible { display: flex; }
+  .sending-spinner {
+    width: 44px; height: 44px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
     border-radius: 50%;
-    background: var(--accent);
-    animation: blink 1s infinite;
+    animation: spin 0.8s linear infinite;
   }
-  .loading-text {
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sending-text {
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-  /* ─── LOGIN ─── */
-  #login-screen {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-  }
-  .login-box {
-    width: 360px;
-    padding: 48px 40px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-  .brand {
-    font-size: 11px;
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 0.3em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 32px;
-  }
-  .login-title {
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 8px;
-    letter-spacing: -0.02em;
-  }
-  .login-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 36px;
-    font-weight: 300;
-    line-height: 1.5;
-  }
-  .login-label {
-    font-size: 10px;
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 0.25em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .login-input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 22px;
-    letter-spacing: 0.5em;
-    padding: 14px 16px;
-    outline: none;
-    transition: border-color 0.2s;
-    text-align: center;
-    -webkit-user-select: text;
-    user-select: text;
-  }
-  .login-input:focus { border-color: var(--accent); }
-  .login-input.error {
-    border-color: var(--danger);
-    animation: shake 0.35s ease;
-  }
-  @keyframes shake {
-    0%,100%{transform:translateX(0)}
-    20%,60%{transform:translateX(-7px)}
-    40%,80%{transform:translateX(7px)}
-  }
-  .login-btn {
-    margin-top: 20px;
-    width: 100%;
-    background: var(--accent);
-    color: #080808;
-    border: none;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    font-weight: 700;
-    padding: 16px;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-  }
-  .login-btn:hover { opacity: 0.85; }
-  .login-btn:active { transform: scale(0.98); }
-  .login-error {
-    margin-top: 12px;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--danger);
-    letter-spacing: 0.05em;
-    text-align: center;
-    min-height: 18px;
-  }
-  .confidential-tag {
-    margin-top: 32px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-  .confidential-tag::before, .confidential-tag::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+    font-size: 12px; letter-spacing: 0.3em;
+    color: var(--text-muted); text-transform: uppercase;
   }
 
-  /* ─── APP ─── */
-  #app-screen { display: none; }
+  /* ─── APP HEADER ─── */
   .app-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(8,8,8,0.96);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,8,8,0.97);
+    backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
-    padding: 16px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 18px 48px;
+    display: flex; align-items: center; justify-content: space-between;
   }
   .app-brand {
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--text-muted);
-    text-transform: uppercase;
+    font-size: 12px; letter-spacing: 0.35em;
+    color: var(--text-muted); text-transform: uppercase;
   }
-  .app-brand b { color: var(--accent); font-weight: 700; }
-  .header-right { display: flex; align-items: center; gap: 20px; }
+  .app-brand b { color: var(--accent); }
   .progress-pill {
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.1em;
+    font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em;
   }
-  .progress-pill span { color: var(--accent); }
-  .logout-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 7px 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .progress-pill span { color: var(--accent); font-weight: 700; }
 
-  .app-body {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 48px 24px 100px;
-  }
+  /* ─── APP BODY ─── */
+  .app-body { max-width: 960px; margin: 0 auto; padding: 52px 40px 100px; }
 
-  /* ─── INTRO ─── */
-  .survey-intro { margin-bottom: 52px; }
+  /* ─── SURVEY INTRO ─── */
+  .survey-intro {
+    display: flex; align-items: flex-end;
+    justify-content: space-between; gap: 32px;
+    margin-bottom: 48px; flex-wrap: wrap;
+  }
   .intro-eyebrow {
     font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.35em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 14px;
+    font-size: 11px; letter-spacing: 0.35em;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;
   }
   .intro-title {
-    font-size: 48px;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 0.95;
-    margin-bottom: 16px;
+    font-size: 56px; font-weight: 800;
+    letter-spacing: -0.03em; line-height: 0.95;
   }
   .intro-title em { color: var(--accent); font-style: normal; }
   .intro-desc {
-    font-size: 14px;
-    color: var(--text-muted);
-    font-weight: 300;
-    line-height: 1.65;
-    max-width: 440px;
+    font-size: 15px; color: var(--text-muted);
+    font-weight: 300; line-height: 1.7;
+    max-width: 280px; text-align: right;
   }
 
-  /* ─── TRACK CARDS ─── */
-  .tracks-list { display: flex; flex-direction: column; gap: 3px; }
-  .track-card {
+  /* ─── DEMO INLINE — género y edad en una sola fila ─── */
+  .demo-inline {
     background: var(--surface);
     border: 1px solid var(--border);
-    transition: border-color 0.3s;
-  }
-  .track-card.rated { border-color: #1f3000; }
-  .track-inner { padding: 22px 28px; }
-  .track-head {
+    padding: 20px 32px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 18px;
+    gap: 0;
+    flex-wrap: wrap;
   }
-  .track-num {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-    min-width: 28px;
-  }
-  .track-name {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    flex: 1;
-  }
-  .rated-check {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--accent);
-    letter-spacing: 0.15em;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .track-card.rated .rated-check { opacity: 1; }
-
-  /* ─── PLAYERS ─── */
-  .players-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  .player-tag {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-  .player {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: border-color 0.2s;
-  }
-  .player.active-player { border-color: rgba(200,245,74,0.25); }
-  .player.unavailable { opacity: 0.25; pointer-events: none; }
-  .player.loading-audio { opacity: 0.6; }
-
-  .play-btn {
-    width: 28px; height: 28px;
-    background: var(--accent);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .play-btn:hover { opacity: 0.8; }
-  .play-btn:active { transform: scale(0.92); }
-  .play-btn svg { width: 10px; height: 10px; fill: #080808; }
-
-  .prog-wrap {
-    flex: 1;
-    height: 3px;
-    background: var(--border);
-    cursor: pointer;
-    position: relative;
-  }
-  .prog-fill {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    pointer-events: none;
-    transition: width 0.08s linear;
-  }
-  .time-lbl {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: var(--text-muted);
-    min-width: 36px;
-    text-align: right;
-  }
-
-  /* ─── STARS ─── */
-  .rating-row {
+  .demo-inline-group {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-wrap: wrap;
+    padding: 4px 0;
   }
+  .demo-inline-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.25em;
+    color: var(--text-muted); text-transform: uppercase;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .demo-inline-label span { color: var(--text-dim); font-size: 9px; }
+  .demo-divider {
+    width: 1px; height: 32px;
+    background: var(--border); flex-shrink: 0;
+    margin: 0 28px;
+  }
+  .opts-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .opt-pill {
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); cursor: pointer;
+    transition: all 0.15s; user-select: none;
+  }
+  .opt-pill:hover { border-color: var(--border-hover); color: var(--text); }
+  .opt-pill.selected {
+    background: var(--accent); border-color: var(--accent);
+    color: #080808; font-weight: 700;
+  }
+
+  /* ─── TRACKS ─── */
+  .tracks-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .track-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.35s, box-shadow 0.35s;
+  }
+  .track-card:hover { border-color: var(--border-hover); }
+  .track-card.rated {
+    border-color: #1c2e00;
+    box-shadow: 0 0 0 1px rgba(200,245,74,0.06) inset;
+  }
+  .track-card.rated-tiktok {
+    border-color: #3a0010;
+    box-shadow: 0 0 0 1px rgba(254,44,85,0.08) inset;
+  }
+
+  .track-inner { padding: 20px 28px 22px; }
+
+  .track-top {
+    display: flex; align-items: center; gap: 18px; margin-bottom: 16px;
+  }
+  .track-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.1em; min-width: 28px; flex-shrink: 0;
+  }
+  .track-name-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .track-name { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .rated-check {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--accent); letter-spacing: 0.1em;
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .track-card.rated .rated-check,
+  .track-card.rated-tiktok .rated-check { opacity: 1; }
+  .track-card.rated-tiktok .rated-check { color: var(--tiktok); }
+
+  /* Stars */
+  .rating-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .rating-lbl {
     font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    white-space: nowrap;
+    font-size: 14px; letter-spacing: 0.15em;
+    color: white; text-transform: uppercase; white-space: nowrap;
   }
   .stars { display: flex; gap: 4px; }
   .star {
-    width: 34px; height: 34px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.12s;
+    width: 46px; height: 46px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.13s;
   }
-  .star:hover { transform: scale(1.18); }
+  .star:hover  { transform: scale(1.22); }
   .star:active { transform: scale(0.88); }
-  .star svg { width: 22px; height: 22px; fill: var(--star-empty); transition: fill 0.12s; }
-  .star.hov svg { fill: rgba(200,245,74,0.35); }
-  .star.on svg { fill: var(--accent); }
+  .star svg {
+    width: 28px; height: 28px;
+    fill: var(--star-empty);
+    transition: fill 0.13s, filter 0.13s;
+  }
+  .star.hov svg { fill: rgba(200,245,74,0.3); }
+  .star.on  svg { fill: var(--accent); filter: drop-shadow(0 0 6px rgba(200,245,74,0.4)); }
   .rating-num {
     font-family: 'Space Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 20px;
-    opacity: 0;
-    transition: opacity 0.2s;
+    font-size: 22px; font-weight: 700;
+    color: var(--accent); min-width: 20px;
+    opacity: 0; transition: opacity 0.2s; line-height: 1;
   }
   .rating-num.show { opacity: 1; }
 
-  /* ─── SUBMIT ─── */
-  .submit-zone {
-    margin-top: 52px;
-    padding: 32px 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 28px;
+  /* ─── TIKTOK / IG ROW ─── */
+  .tiktok-row {
+    display: flex; align-items: center; gap: 16px;
+    padding-top: 14px; border-top: 1px solid var(--border);
     flex-wrap: wrap;
   }
-  .submit-left { flex: 1; min-width: 180px; }
-  .submit-progress-bar {
-    height: 2px;
-    background: var(--border);
-    margin-bottom: 14px;
-    overflow: hidden;
-  }
-  .submit-progress-fill {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.4s ease;
-  }
-  .submit-count {
+  .tiktok-label {
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.15em;
+    font-size: 10px; letter-spacing: 0.2em;
+    color: var(--text-muted); text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
   }
-  .submit-count b { color: var(--accent); }
+  .tiktok-label svg { width: 13px; height: 13px; fill: currentColor; flex-shrink: 0; }
+  .tiktok-label .sep { color: var(--text-dim); }
+  .tiktok-btn {
+    padding: 8px 20px; border: 1px solid var(--border);
+    background: var(--bg); font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+    user-select: none;
+  }
+  .tiktok-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .tiktok-btn.selected {
+    background: var(--tiktok); border-color: var(--tiktok);
+    color: white; font-weight: 700;
+  }
 
-  .jurado-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 200px;
+  /* ─── OPEN QUESTIONS ─── */
+  .open-questions {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 8px;
   }
-  .jurado-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-  }
-  .jurado-input {
-    background: var(--bg);
+  .open-q-card {
+    background: var(--surface);
     border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    padding: 11px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    -webkit-user-select: text;
-    user-select: text;
-    width: 100%;
+    padding: 28px 32px;
   }
-  .jurado-input:focus { border-color: var(--accent); }
-  .jurado-input::placeholder { color: var(--text-dim); }
-
-  .submit-btn {
-    background: var(--accent);
-    border: none;
-    color: #080808;
+  .open-q-num {
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    font-weight: 700;
-    padding: 18px 36px;
-    cursor: pointer;
-    opacity: 0.25;
-    pointer-events: none;
-    transition: opacity 0.3s, transform 0.1s;
-    white-space: nowrap;
+    font-size: 10px; letter-spacing: 0.3em;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .open-q-label {
+    font-size: 20px; font-weight: 700;
+    letter-spacing: -0.01em; margin-bottom: 6px; line-height: 1.25;
+  }
+  .open-q-hint {
+    font-size: 14px; color: var(--text-muted);
+    font-weight: 300; margin-bottom: 18px; line-height: 1.6;
+  }
+  .open-q-suggestions {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .suggestion-chip {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em;
+    color: var(--text-muted); cursor: pointer;
+    transition: all 0.15s; user-select: none;
+  }
+  .suggestion-chip:hover {
+    border-color: var(--accent); color: var(--accent);
+  }
+  .open-q-textarea {
+    width: 100%;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 300;
+    padding: 14px 16px; outline: none;
+    resize: vertical; min-height: 90px; line-height: 1.65;
+    transition: border-color 0.2s;
+  }
+  .open-q-textarea:focus { border-color: var(--accent); }
+  .open-q-textarea::placeholder { color: var(--text-dim); font-style: italic; }
+
+  /* ─── SUBMIT ─── */
+  .submit-zone {
+    margin-top: 8px; padding: 28px 32px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 28px; flex-wrap: wrap;
+  }
+  .submit-left { flex: 1; min-width: 180px; }
+  .submit-progress-bar { height: 2px; background: var(--border); margin-bottom: 12px; overflow: hidden; }
+  .submit-progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; }
+  .submit-count { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .submit-count b { color: var(--accent); }
+  .submit-btn {
+    background: var(--accent); border: none; color: #080808;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    letter-spacing: 0.25em; text-transform: uppercase; font-weight: 700;
+    padding: 18px 36px; cursor: pointer;
+    opacity: 0.22; pointer-events: none;
+    transition: opacity 0.3s, transform 0.1s; white-space: nowrap;
   }
   .submit-btn.ready { opacity: 1; pointer-events: all; }
-  .submit-btn.sending { opacity: 0.6; pointer-events: none; }
-  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:hover  { opacity: 0.85; }
   .submit-btn:active { transform: scale(0.97); }
 
   /* ─── RESULTS ─── */
   #results-screen { display: none; }
-  .results-body {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 52px 24px 80px;
+  .results-body { max-width: 960px; margin: 0 auto; padding: 56px 40px 100px; }
+  .thankyou-banner {
+    background: var(--accent-dim); border: 1px solid rgba(200,245,74,0.18);
+    padding: 24px 32px; margin-bottom: 36px;
+    display: flex; align-items: center; gap: 20px;
   }
-  .results-title {
-    font-size: 52px;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 0.95;
-    margin-bottom: 12px;
-  }
+  .thankyou-icon { font-size: 24px; flex-shrink: 0; }
+  .thankyou-title { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 4px; letter-spacing: -0.01em; }
+  .thankyou-sub { font-size: 14px; color: var(--text-muted); font-weight: 300; }
+  .results-title { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 0.92; margin-bottom: 24px; }
   .results-title em { color: var(--accent); font-style: normal; }
-  .results-sub {
-    font-size: 14px;
-    color: var(--text-muted);
-    font-weight: 300;
-    margin-bottom: 48px;
+  .results-demo { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
+  .results-demo-pill {
+    font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.15em;
+    padding: 6px 14px; border: 1px solid var(--border);
+    color: var(--text-muted); text-transform: uppercase;
   }
-  .results-list {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    margin-bottom: 40px;
-  }
+  .results-demo-pill b { color: var(--accent); }
+  .results-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
   .result-row {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 18px 28px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 14px 22px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   }
-  .res-num {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    min-width: 30px;
-  }
-  .res-name { flex: 1; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .res-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-dim); min-width: 30px; }
+  .res-name { flex: 1; font-size: 15px; font-weight: 700; min-width: 100px; }
   .res-stars { display: flex; gap: 3px; }
-  .res-star svg { width: 14px; height: 14px; }
-  .res-score {
-    font-family: 'Space Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 18px;
-    text-align: right;
-  }
-  .results-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .res-star svg { width: 15px; height: 15px; }
+  .res-score { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: var(--accent); min-width: 36px; text-align: right; }
+  .res-tiktok { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 12px; }
+  .res-tiktok.yes { background: var(--tiktok); color: white; }
+  .res-tiktok.no  { color: var(--text-dim); border: 1px solid var(--border); }
+
+  .results-open { display: flex; flex-direction: column; gap: 4px; margin-bottom: 28px; }
+  .results-open-row { background: var(--surface); border: 1px solid var(--border); padding: 20px 24px; }
+  .results-open-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+  .results-open-answer { font-size: 15px; font-weight: 300; line-height: 1.65; }
+
+  .results-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .action-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 14px 28px;
-    cursor: pointer;
-    transition: all 0.2s;
+    background: none; border: 1px solid var(--border);
+    color: var(--text-muted); font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 14px 28px; cursor: pointer; transition: all 0.2s;
   }
   .action-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* ─── DRIVE WARNING ─── */
-  .drive-warning {
-    background: rgba(200,245,74,0.06);
-    border: 1px solid rgba(200,245,74,0.2);
-    padding: 12px 16px;
-    margin-bottom: 6px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: rgba(200,245,74,0.7);
-    letter-spacing: 0.1em;
-    display: none;
-    align-items: center;
-    gap: 10px;
-  }
-  .drive-warning.visible { display: flex; }
-
   /* ─── RESPONSIVE ─── */
-  @media (max-width: 620px) {
+  @media (max-width: 720px) {
     .app-header { padding: 14px 20px; }
-    .app-body { padding: 32px 16px 80px; }
-    .intro-title { font-size: 36px; }
-    .players-row { grid-template-columns: 1fr; }
-    .track-inner { padding: 18px 18px; }
+    .app-body, .results-body { padding: 28px 18px 80px; }
+    .survey-intro { flex-direction: column; align-items: flex-start; }
+    .intro-title { font-size: 40px; }
+    .intro-desc { text-align: left; max-width: 100%; }
+    .demo-inline { flex-direction: column; align-items: flex-start; gap: 16px; padding: 20px 20px; }
+    .demo-divider { display: none; }
+    .track-top { flex-wrap: wrap; }
+    .rating-wrap { width: 100%; justify-content: flex-start; margin-top: 4px; }
     .submit-zone { flex-direction: column; align-items: stretch; }
-    .login-box { width: calc(100% - 40px); }
+    .open-q-card { padding: 22px 20px; }
   }
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen">
-  <div class="loading-dot"></div>
-  <div class="loading-text">Cargando...</div>
+<div id="sending-overlay">
+  <div class="sending-spinner"></div>
+  <div class="sending-text">Registrando evaluación...</div>
 </div>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-box">
-    <div class="brand">Sound Survey</div>
-    <h2 class="login-title">Acceso<br>Privado</h2>
-    <p class="login-sub">Material inédito y confidencial.<br>Acceso restringido.</p>
-    <label class="login-label" for="pwd">Contraseña de acceso</label>
-    <input class="login-input" type="password" id="pwd" maxlength="8" autocomplete="off" placeholder="· · ·">
-    <button class="login-btn" onclick="doLogin()">Entrar →</button>
-    <div class="login-error" id="login-error"></div>
-    <div class="confidential-tag">Confidencial</div>
-  </div>
-</div>
+<!-- SURVEY -->
+<header class="app-header">
+  <div class="app-brand">Sound <b>Survey</b></div>
+  <div class="progress-pill" id="hdr-progress"><span>0</span> / 15</div>
+</header>
 
-<!-- APP -->
-<div id="app-screen">
-  <header class="app-header">
-    <div class="app-brand">Sound <b>Survey</b></div>
-    <div class="header-right">
-      <div class="progress-pill" id="hdr-progress"><span>0</span> / 15</div>
-      <button class="logout-btn" onclick="logout()">Salir</button>
-    </div>
-  </header>
+<div class="app-body">
 
-  <div class="app-body">
-    <div class="survey-intro">
+  <div class="survey-intro">
+    <div class="intro-left">
       <div class="intro-eyebrow">Evaluación de material inédito</div>
       <h1 class="intro-title">Escucha.<br><em>Califica.</em></h1>
-      <p class="intro-desc">15 tracks inéditos. Cada uno tiene hasta 2 fragmentos de 30 segundos. Escucha y califica del 1 al 5.</p>
     </div>
+    <p class="intro-desc">15 tracks inéditos. Califica del 1 al 5 y responde las preguntas.</p>
+  </div>
 
-    <!-- Aviso Drive si hay problema de cookies -->
-    <div class="drive-warning" id="drive-warning">
-      ⚠ Si el audio no carga, abre drive.google.com en esta misma sesión del navegador.
+  <!-- Género y edad en una sola línea -->
+  <div class="demo-inline">
+    <div class="demo-inline-group">
+      <div class="demo-inline-label">Género <span>(opcional)</span></div>
+      <div class="opts-row" id="genero-opts">
+        <div class="opt-pill" data-val="Masculino"         onclick="selectOpt('genero',this)">Masculino</div>
+        <div class="opt-pill" data-val="Femenino"          onclick="selectOpt('genero',this)">Femenino</div>
+        <div class="opt-pill" data-val="No binario"        onclick="selectOpt('genero',this)">No binario</div>
+        <div class="opt-pill" data-val="Prefiero no decir" onclick="selectOpt('genero',this)">Prefiero no decir</div>
+      </div>
     </div>
-
-    <div class="tracks-list" id="tracks-list"></div>
-
-    <div class="submit-zone">
-      <div class="submit-left">
-        <div class="submit-progress-bar">
-          <div class="submit-progress-fill" id="submit-fill"></div>
-        </div>
-        <div class="submit-count" id="submit-count">
-          <b>0</b> de 15 tracks calificados
-        </div>
+    <div class="demo-divider"></div>
+    <div class="demo-inline-group">
+      <div class="demo-inline-label">Edad <span>(opcional)</span></div>
+      <div class="opts-row" id="edad-opts">
+        <div class="opt-pill" data-val="&lt;18"  onclick="selectOpt('edad',this)">&lt;18</div>
+        <div class="opt-pill" data-val="18–24"   onclick="selectOpt('edad',this)">18–24</div>
+        <div class="opt-pill" data-val="25–34"   onclick="selectOpt('edad',this)">25–34</div>
+        <div class="opt-pill" data-val="35–44"   onclick="selectOpt('edad',this)">35–44</div>
+        <div class="opt-pill" data-val="45+"     onclick="selectOpt('edad',this)">45+</div>
       </div>
-      <div class="jurado-field">
-        <label class="jurado-label" for="jurado-input">Tu nombre</label>
-        <input class="jurado-input" type="text" id="jurado-input"
-          placeholder="Escribe tu nombre..." autocomplete="off" maxlength="60">
-      </div>
-      <button class="submit-btn" id="submit-btn" onclick="submitSurvey()">
-        Enviar Evaluación →
-      </button>
     </div>
   </div>
+
+  <div class="tracks-list" id="tracks-list"></div>
+
+  <!-- Preguntas abiertas -->
+  <div class="open-questions">
+
+    <div class="open-q-card">
+      <div class="open-q-num">Pregunta abierta 01</div>
+      <div class="open-q-label">¿Qué track escucharías en repeat?</div>
+      <div class="open-q-hint">¿Y en qué momento de tu día lo pondrías?</div>
+      <div class="open-q-suggestions">
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'En el gym')">En el gym</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'Manejando')">Manejando</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'Trabajando')">Trabajando</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'De noche')">De noche</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'En la fiesta')">En la fiesta</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'Relajándome')">Relajándome</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q1', 'En la mañana')">En la mañana</div>
+      </div>
+      <textarea class="open-q-textarea" id="q1" placeholder="Escribe el nombre del track y cuándo lo escucharías..."></textarea>
+    </div>
+
+    <div class="open-q-card">
+      <div class="open-q-num">Pregunta abierta 02</div>
+      <div class="open-q-label">¿Qué track sentiste más cercano?</div>
+      <div class="open-q-hint">¿Qué fue lo que te conectó?</div>
+      <div class="open-q-suggestions">
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'La letra')">La letra</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'El sonido')">El sonido</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'El mood')">El mood</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'El ritmo')">El ritmo</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'Me recordó algo')">Me recordó algo</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'La energía')">La energía</div>
+        <div class="suggestion-chip" onclick="appendSuggestion('q2', 'La melodía')">La melodía</div>
+      </div>
+      <textarea class="open-q-textarea" id="q2" placeholder="Escribe el nombre del track y qué fue lo que te enganchó..."></textarea>
+    </div>
+
+  </div>
+
+  <div class="submit-zone">
+    <div class="submit-left">
+      <div class="submit-progress-bar">
+        <div class="submit-progress-fill" id="submit-fill"></div>
+      </div>
+      <div class="submit-count" id="submit-count"><b>0</b> de 15 tracks calificados</div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitSurvey()">Enviar Evaluación →</button>
+  </div>
+
 </div>
 
 <!-- RESULTS -->
 <div id="results-screen">
   <header class="app-header">
     <div class="app-brand">Sound <b>Survey</b></div>
-    <div class="header-right">
-      <button class="logout-btn" onclick="logout()">Nueva sesión</button>
-    </div>
+    <button class="action-btn" onclick="newSession()" style="padding:8px 18px;font-size:10px">Nueva sesión</button>
   </header>
   <div class="results-body">
-    <h1 class="results-title">Evaluación<br><em>Completada</em></h1>
-    <p class="results-sub" id="results-sub">Tus calificaciones han sido registradas. Gracias.</p>
+    <div class="thankyou-banner">
+      <div class="thankyou-icon">✦</div>
+      <div>
+        <div class="thankyou-title">¡Gracias por tu evaluación!</div>
+        <div class="thankyou-sub">Tus respuestas han sido registradas exitosamente.</div>
+      </div>
+    </div>
+    <h1 class="results-title">Tu<br><em>Evaluación</em></h1>
+    <div class="results-demo" id="results-demo"></div>
     <div class="results-list" id="results-list"></div>
+    <div class="results-open" id="results-open"></div>
     <div class="results-actions">
       <button class="action-btn" onclick="copyResults()">Copiar resultados</button>
-      <button class="action-btn" onclick="logout()">Nueva sesión</button>
+      <button class="action-btn" onclick="newSession()">Nueva sesión</button>
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════
-//  CONFIG
-// ═══════════════════════════════════════
-const PASSWORD  = '444';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzvoTJqvouWXk5UJjkhEln1wvvxHrM4jcURktTo-KfHz6iZ_qD9giByqvcvNOkQmjZBpQ/exec';
+// ── CONFIGURACIÓN ─────────────────────────────────────
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxOjLuPnl9gTgAH5eD2LZZGVP3tnA9Hq4IKzgiH4hnxOc3nUqzSpTOatX3Mng7qS8McOw/exec';
 
-// ═══════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════
-let tracks      = [];
-let ratings     = [];
-let audios      = [];   // Audio[][]
-let activeAudio = null;
-let activeKey   = null;
-let audioErrorCount = 0;
+const TRACKS = [
+  'Track 01','Track 02','Track 03','Track 04','Track 05',
+  'Track 06','Track 07','Track 08','Track 09','Track 10',
+  'Track 11','Track 12','Track 13','Track 14','Track 15'
+];
+// ─────────────────────────────────────────────────────
 
-// ═══════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const res = await fetch('tracks.json?' + Date.now());
-    if (!res.ok) throw new Error('No se pudo cargar tracks.json');
-    tracks  = await res.json();
-    ratings = new Array(tracks.length).fill(0);
-    audios  = tracks.map(() => [null, null]);
+let ratings = new Array(TRACKS.length).fill(0);
+let tiktoks = new Array(TRACKS.length).fill('');
+const selectedOpts = { genero: null, edad: null };
 
-    show('loading-screen', false);
-    show('login-screen', 'flex');
-    document.getElementById('pwd').focus();
-  } catch(e) {
-    document.querySelector('#loading-screen .loading-text').textContent = 'Error: ' + e.message;
-  }
-});
+buildTracks();
 
-// ═══════════════════════════════════════
-//  LOGIN
-// ═══════════════════════════════════════
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && isVisible('login-screen')) doLogin();
-});
-
-function doLogin() {
-  const val = document.getElementById('pwd').value.trim();
-  const inp = document.getElementById('pwd');
-  const err = document.getElementById('login-error');
-
-  if (val === PASSWORD) {
-    show('login-screen', false);
-    show('app-screen', 'block');
-    buildTracks();
-  } else {
-    inp.classList.add('error');
-    inp.value = '';
-    err.textContent = 'Contraseña incorrecta.';
-    setTimeout(() => { inp.classList.remove('error'); err.textContent = ''; inp.focus(); }, 1400);
-  }
+// ── DEMO OPTS ──
+function selectOpt(group, el) {
+  document.getElementById(group+'-opts').querySelectorAll('.opt-pill')
+    .forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedOpts[group] = el.dataset.val;
 }
 
-function logout() { location.reload(); }
+// ── SUGGESTIONS ──
+function appendSuggestion(fieldId, text) {
+  const ta = document.getElementById(fieldId);
+  const cur = ta.value.trim();
+  ta.value = cur ? cur + ', ' + text : text;
+  ta.focus();
+}
 
-// ═══════════════════════════════════════
-//  BUILD TRACKS
-// ═══════════════════════════════════════
+// ── BUILD TRACKS ──
 function buildTracks() {
   const list = document.getElementById('tracks-list');
   list.innerHTML = '';
-
-  tracks.forEach((track, t) => {
+  TRACKS.forEach((name, t) => {
     const card = document.createElement('div');
     card.className = 'track-card';
-    card.id = `card-${t}`;
-
-    const playersHtml = [0, 1].map(f => {
-      const hasFrag = track.fragmentos && track.fragmentos[f];
-      return `
-        <div class="player-wrap">
-          <div class="player-tag">Fragmento ${f === 0 ? 'A' : 'B'}</div>
-          <div class="player ${hasFrag ? '' : 'unavailable'}" id="player-${t}-${f}">
-            <button class="play-btn" onclick="togglePlay(${t},${f})" id="playbtn-${t}-${f}">
-              ${iconPlay()}
-            </button>
-            <div class="prog-wrap" onclick="seekAudio(event,${t},${f})">
-              <div class="prog-fill" id="prog-${t}-${f}"></div>
-            </div>
-            <div class="time-lbl" id="time-${t}-${f}">—:——</div>
-          </div>
-        </div>`;
-    }).join('');
-
+    card.id = 'card-' + t;
     card.innerHTML = `
       <div class="track-inner">
-        <div class="track-head">
+        <div class="track-top">
           <div class="track-num">${String(t+1).padStart(2,'0')}</div>
-          <div class="track-name">${escHtml(track.name || 'Track ' + (t+1))}</div>
-          <div class="rated-check">✓ RATED</div>
-        </div>
-        <div class="players-row">${playersHtml}</div>
-        <div class="rating-row">
-          <div class="rating-lbl">Calificar</div>
-          <div class="stars" id="stars-${t}">
-            ${[1,2,3,4,5].map(s => `
-              <div class="star"
-                onmouseenter="hoverStars(${t},${s})"
-                onmouseleave="clearHover(${t})"
-                onclick="setRating(${t},${s})">
-                ${iconStar()}
-              </div>`).join('')}
+          <div class="track-name-wrap">
+            <div class="track-name">${escHtml(name)}</div>
+            <div class="rated-check">&#10003; calificado</div>
           </div>
-          <div class="rating-num" id="rval-${t}">—</div>
+          <div class="rating-wrap">
+            <div class="rating-lbl">Calificar</div>
+            <div class="stars" id="stars-${t}">
+              ${[1,2,3,4,5].map(s=>`
+                <div class="star"
+                  onmouseenter="hoverStars(${t},${s})"
+                  onmouseleave="clearHover(${t})"
+                  onclick="setRating(${t},${s})">${iconStar()}</div>`).join('')}
+            </div>
+            <div class="rating-num" id="rval-${t}"></div>
+          </div>
+        </div>
+        <div class="tiktok-row">
+          <div class="tiktok-label">
+            <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.23 8.23 0 0 0 4.83 1.56V6.79a4.85 4.85 0 0 1-1.06-.1z"/></svg>
+            <span class="sep">/</span>
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            &iquest;Lo usar&iacute;as en TikTok / Instagram?
+          </div>
+          <div class="tiktok-options">
+            <div class="tiktok-btn" id="tt-yes-${t}" onclick="toggleTikTok(${t})">S&iacute; &#10003;</div>
+          </div>
         </div>
       </div>`;
-
     list.appendChild(card);
-
-    // Init audio for fragments that have a URL
-    [0, 1].forEach(f => {
-      const src = track.fragmentos && track.fragmentos[f];
-      if (src) initAudio(t, f, src);
-    });
   });
-
   updateProgress();
 }
 
-// ═══════════════════════════════════════
-//  AUDIO — Google Drive streaming
-// ═══════════════════════════════════════
-function initAudio(t, f, src) {
-  const audio = new Audio();
-  audio.crossOrigin = 'anonymous';
-  audio.preload = 'none'; // lazy — only load when user hits play
-
-  audio.addEventListener('loadedmetadata', () => {
-    const el = document.getElementById(`time-${t}-${f}`);
-    if (el) el.textContent = fmt(audio.duration);
-    document.getElementById(`player-${t}-${f}`)?.classList.remove('loading-audio');
-  });
-
-  audio.addEventListener('timeupdate', () => {
-    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
-    const prog = document.getElementById(`prog-${t}-${f}`);
-    const time = document.getElementById(`time-${t}-${f}`);
-    if (prog) prog.style.width = pct + '%';
-    if (time) time.textContent = fmt(audio.currentTime);
-  });
-
-  audio.addEventListener('ended', () => {
-    audio._playing = false;
-    setIcon(t, f, false);
-    const prog = document.getElementById(`prog-${t}-${f}`);
-    if (prog) prog.style.width = '0%';
-    document.getElementById(`player-${t}-${f}`)?.classList.remove('active-player');
-  });
-
-  audio.addEventListener('error', () => {
-    audio._playing = false;
-    setIcon(t, f, false);
-    const player = document.getElementById(`player-${t}-${f}`);
-    if (player) {
-      player.classList.remove('loading-audio', 'active-player');
-      player.classList.add('unavailable');
-    }
-    const time = document.getElementById(`time-${t}-${f}`);
-    if (time) time.textContent = 'N/A';
-    audioErrorCount++;
-    if (audioErrorCount >= 2) {
-      document.getElementById('drive-warning')?.classList.add('visible');
-    }
-  });
-
-  // Use Drive streaming URL
-  audio.src = src;
-  audios[t][f] = audio;
-}
-
-function togglePlay(t, f) {
-  const audio = audios[t][f];
-  if (!audio) return;
-  const key = `${t}-${f}`;
-  const player = document.getElementById(`player-${t}-${f}`);
-
-  if (audio._playing) {
-    audio.pause();
-    audio._playing = false;
-    setIcon(t, f, false);
-    player?.classList.remove('active-player');
-  } else {
-    // Stop current
-    if (activeAudio && activeAudio !== audio) {
-      activeAudio.pause();
-      activeAudio._playing = false;
-      if (activeKey) {
-        const [at, af] = activeKey.split('-').map(Number);
-        setIcon(at, af, false);
-        document.getElementById(`player-${at}-${af}`)?.classList.remove('active-player');
-      }
-    }
-    // Show loading state
-    player?.classList.add('loading-audio');
-    audio.play()
-      .then(() => { player?.classList.remove('loading-audio'); })
-      .catch(() => { player?.classList.remove('loading-audio'); });
-    audio._playing = true;
-    activeAudio = audio;
-    activeKey = key;
-    setIcon(t, f, true);
-    player?.classList.add('active-player');
-  }
-}
-
-function seekAudio(e, t, f) {
-  const audio = audios[t][f];
-  if (!audio || !audio.duration) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  audio.currentTime = pct * audio.duration;
-}
-
-function setIcon(t, f, playing) {
-  const btn = document.getElementById(`playbtn-${t}-${f}`);
-  if (btn) btn.innerHTML = playing ? iconPause() : iconPlay();
-}
-
-function fmt(s) {
-  if (!s || isNaN(s)) return '0:00';
-  return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
-}
-
-// ═══════════════════════════════════════
-//  STARS
-// ═══════════════════════════════════════
+// ── STARS ──
 function hoverStars(t, n) {
-  document.querySelectorAll(`#stars-${t} .star`).forEach((s,i) => {
-    s.classList.toggle('hov', i < n && ratings[t] === 0);
-  });
+  document.querySelectorAll('#stars-'+t+' .star').forEach((s,i) =>
+    s.classList.toggle('hov', i < n && ratings[t] === 0));
 }
 function clearHover(t) {
-  document.querySelectorAll(`#stars-${t} .star`).forEach(s => s.classList.remove('hov'));
+  document.querySelectorAll('#stars-'+t+' .star').forEach(s => s.classList.remove('hov'));
 }
 function setRating(t, n) {
   ratings[t] = n;
-  document.querySelectorAll(`#stars-${t} .star`).forEach((s,i) => {
+  document.querySelectorAll('#stars-'+t+' .star').forEach((s,i) => {
     s.classList.remove('hov');
     s.classList.toggle('on', i < n);
   });
-  const rval = document.getElementById(`rval-${t}`);
-  rval.textContent = n;
-  rval.classList.add('show');
-  document.getElementById(`card-${t}`)?.classList.add('rated');
-  updateProgress();
+  const rv = document.getElementById('rval-'+t);
+  rv.textContent = n; rv.classList.add('show');
+  updateCard(t); updateProgress();
 }
 
-// ═══════════════════════════════════════
-//  PROGRESS
-// ═══════════════════════════════════════
+// ── TIKTOK — toggle, solo Sí ──
+function toggleTikTok(t) {
+  tiktoks[t] = tiktoks[t] === 'yes' ? '' : 'yes';
+  const btn = document.getElementById('tt-yes-'+t);
+  btn.classList.toggle('selected', tiktoks[t] === 'yes');
+  updateCard(t);
+}
+
+function updateCard(t) {
+  const card = document.getElementById('card-'+t);
+  if (!card) return;
+  card.classList.remove('rated','rated-tiktok');
+  if (ratings[t] > 0) {
+    card.classList.add(tiktoks[t] === 'yes' ? 'rated-tiktok' : 'rated');
+  }
+}
+
+// ── PROGRESS ──
 function updateProgress() {
-  const rated = ratings.filter(r => r > 0).length;
-  const total = tracks.length;
-  document.getElementById('submit-fill').style.width = ((rated/total)*100) + '%';
-  document.getElementById('submit-count').innerHTML = `<b>${rated}</b> de ${total} tracks calificados`;
-  document.getElementById('hdr-progress').innerHTML = `<span>${rated}</span> / ${total}`;
-  document.getElementById('submit-btn').classList.toggle('ready', rated === total);
+  const done  = ratings.filter(r => r > 0).length;
+  const total = TRACKS.length;
+  document.getElementById('submit-fill').style.width = ((done/total)*100)+'%';
+  document.getElementById('submit-count').innerHTML  = '<b>'+done+'</b> de '+total+' tracks calificados';
+  document.getElementById('hdr-progress').innerHTML  = '<span>'+done+'</span> / '+total;
+  document.getElementById('submit-btn').classList.toggle('ready', done === total);
 }
 
-// ═══════════════════════════════════════
-//  SUBMIT + GOOGLE SHEETS
-// ═══════════════════════════════════════
-async function sendToSheets(jurado) {
+// ── SUBMIT ──
+async function submitSurvey() {
+  if (ratings.filter(r => r > 0).length < TRACKS.length) return;
+
+  const ratingsData = ratings.map((score,t) => ({
+    name: TRACKS[t], score, tiktok: tiktoks[t] === 'yes' ? 'yes' : 'no'
+  }));
+  const q1 = (document.getElementById('q1').value || '').trim();
+  const q2 = (document.getElementById('q2').value || '').trim();
+
   const payload = {
-    jurado,
-    ratings: ratings.map((score, t) => ({
-      name: tracks[t]?.name || `Track ${t+1}`,
-      score
-    }))
+    genero:  selectedOpts.genero || '',
+    edad:    selectedOpts.edad   || '',
+    q1, q2,
+    ratings: JSON.stringify(ratingsData)
   };
-  await fetch(SHEETS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+
+  document.getElementById('sending-overlay').classList.add('visible');
+  try {
+    await fetch(SHEETS_URL + '?' + new URLSearchParams(payload), { method:'GET', mode:'no-cors' });
+  } catch(e) {}
+  document.getElementById('sending-overlay').classList.remove('visible');
+  showResults(q1, q2);
 }
 
-function submitSurvey() {
-  if (ratings.filter(r => r > 0).length < tracks.length) return;
-  const jurado = (document.getElementById('jurado-input')?.value || '').trim() || 'Anónimo';
-  const btn = document.getElementById('submit-btn');
-  if (activeAudio) { activeAudio.pause(); activeAudio._playing = false; }
+function showResults(q1, q2) {
+  document.querySelector('.app-header').style.display = 'none';
+  document.querySelector('.app-body').style.display   = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+  window.scrollTo({ top:0, behavior:'smooth' });
 
-  btn.textContent = 'Enviando...';
-  btn.classList.add('sending');
+  // Demo pills
+  const parts = [
+    selectedOpts.genero ? ['Género', selectedOpts.genero] : null,
+    selectedOpts.edad   ? ['Edad',   selectedOpts.edad]   : null,
+  ].filter(Boolean);
+  document.getElementById('results-demo').innerHTML = parts.length
+    ? parts.map(([l,v]) => `<div class="results-demo-pill">${l}: <b>${escHtml(v)}</b></div>`).join('')
+    : '';
 
-  sendToSheets(jurado)
-    .catch(() => {})
-    .finally(() => showResults(jurado));
-}
-
-function showResults(jurado) {
-  show('app-screen', false);
-  show('results-screen', 'block');
-  document.getElementById('results-sub').textContent =
-    `Evaluación de ${jurado} registrada. Gracias.`;
-
+  // Track results
   const list = document.getElementById('results-list');
   list.innerHTML = '';
-  ratings.forEach((r, t) => {
-    const name = tracks[t]?.name || `Track ${t+1}`;
-    const starsHtml = [1,2,3,4,5].map(s => `
-      <div class="res-star">
-        <svg viewBox="0 0 24 24" fill="${s<=r ? 'var(--accent)' : 'var(--star-empty)'}">
-          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-        </svg>
-      </div>`).join('');
+  ratings.forEach((r,t) => {
+    const isTT = tiktoks[t] === 'yes';
+    const starsHtml = [1,2,3,4,5].map(s =>
+      `<div class="res-star"><svg viewBox="0 0 24 24" fill="${s<=r?'var(--accent)':'var(--star-empty)'}"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></div>`
+    ).join('');
     const row = document.createElement('div');
     row.className = 'result-row';
     row.innerHTML = `
       <div class="res-num">${String(t+1).padStart(2,'0')}</div>
-      <div class="res-name">${escHtml(name)}</div>
+      <div class="res-name">${escHtml(TRACKS[t])}</div>
       <div class="res-stars">${starsHtml}</div>
-      <div class="res-score">${r}/5</div>`;
+      <div class="res-score">${r}/5</div>
+      <div class="res-tiktok ${isTT?'yes':'no'}">${isTT?'TikTok/IG ✓':'—'}</div>`;
     list.appendChild(row);
   });
+
+  // Open questions
+  const openEl = document.getElementById('results-open');
+  openEl.innerHTML = '';
+  if (q1) openEl.innerHTML += `<div class="results-open-row"><div class="results-open-label">Track en repeat</div><div class="results-open-answer">${escHtml(q1)}</div></div>`;
+  if (q2) openEl.innerHTML += `<div class="results-open-row"><div class="results-open-label">Track más cercano</div><div class="results-open-answer">${escHtml(q2)}</div></div>`;
 }
 
 function copyResults() {
-  let txt = 'SOUND SURVEY — Resultados\n' + '─'.repeat(36) + '\n';
-  ratings.forEach((r, t) => {
-    const name = tracks[t]?.name || `Track ${t+1}`;
-    txt += `${String(t+1).padStart(2,'0')}. ${name.padEnd(24)} ${'★'.repeat(r)}${'☆'.repeat(5-r)}  ${r}/5\n`;
+  const q1 = (document.getElementById('q1')?.value || '').trim();
+  const q2 = (document.getElementById('q2')?.value || '').trim();
+  let txt = 'SOUND SURVEY — Resultados\n';
+  if (selectedOpts.genero) txt += 'Género: ' + selectedOpts.genero + '\n';
+  if (selectedOpts.edad)   txt += 'Edad: '   + selectedOpts.edad   + '\n';
+  txt += '─'.repeat(40) + '\n';
+  ratings.forEach((r,t) => {
+    const tt = tiktoks[t]==='yes' ? ' 📱' : '';
+    txt += String(t+1).padStart(2,'0')+'. '+TRACKS[t].padEnd(22)+
+           ' '+'★'.repeat(r)+'☆'.repeat(5-r)+'  '+r+'/5'+tt+'\n';
   });
-  txt += '─'.repeat(36) + '\n';
-  txt += `Promedio: ${(ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1)}/5\n`;
+  txt += '─'.repeat(40) + '\n';
+  txt += 'Promedio: '+(ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1)+'/5\n';
+  txt += 'TikTok/IG: '+tiktoks.filter(v=>v==='yes').length+' de '+TRACKS.length+'\n';
+  if (q1) txt += '\nRepeat: ' + q1 + '\n';
+  if (q2) txt += 'Conexión: ' + q2 + '\n';
   navigator.clipboard.writeText(txt).then(() => {
     const btn = event.target;
     btn.textContent = '✓ Copiado';
@@ -1008,24 +736,9 @@ function copyResults() {
   });
 }
 
-// ═══════════════════════════════════════
-//  ICONS + UTILS
-// ═══════════════════════════════════════
-function iconPlay()  { return `<svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>`; }
-function iconPause() { return `<svg viewBox="0 0 10 10"><rect x="1.5" y="1" width="2.5" height="8"/><rect x="6" y="1" width="2.5" height="8"/></svg>`; }
-function iconStar()  { return `<svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>`; }
-
-function show(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = val === false ? 'none' : (val || 'block');
-}
-function isVisible(id) {
-  const el = document.getElementById(id);
-  return el && el.style.display !== 'none';
-}
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function newSession() { location.reload(); }
+function iconStar()   { return '<svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>'; }
+function escHtml(s)   { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>
