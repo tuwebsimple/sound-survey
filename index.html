@@ -433,7 +433,9 @@
         <div class="opt-pill" data-val="Prefiero no decir" onclick="selectOpt('genero',this)">Prefiero no decir</div>
       </div>
     </div>
+    
     <div class="demo-divider"></div>
+    
     <div class="demo-inline-group">
       <div class="demo-inline-label">Edad <span>(opcional)</span></div>
       <div class="opts-row" id="edad-opts">
@@ -445,6 +447,50 @@
       </div>
     </div>
   </div>
+
+  <div class="demo-divider"></div>
+    
+  <div class="demo-inline-group">
+  <div class="demo-inline-label">¿En qué alcaldía vives? <span>(opcional)</span></div>
+  <div class="opts-row" id="alcaldia-opts" style="flex-wrap: wrap;">
+    <div class="opt-pill" data-val="Álvaro Obregón"        onclick="selectOpt('alcaldia',this)">Álvaro Obregón</div>
+    <div class="opt-pill" data-val="Azcapotzalco"          onclick="selectOpt('alcaldia',this)">Azcapotzalco</div>
+    <div class="opt-pill" data-val="Benito Juárez"         onclick="selectOpt('alcaldia',this)">Benito Juárez</div>
+    <div class="opt-pill" data-val="Coyoacán"              onclick="selectOpt('alcaldia',this)">Coyoacán</div>
+    <div class="opt-pill" data-val="Cuajimalpa"            onclick="selectOpt('alcaldia',this)">Cuajimalpa</div>
+    <div class="opt-pill" data-val="Cuauhtémoc"            onclick="selectOpt('alcaldia',this)">Cuauhtémoc</div>
+    <div class="opt-pill" data-val="Gustavo A. Madero"     onclick="selectOpt('alcaldia',this)">Gustavo A. Madero</div>
+    <div class="opt-pill" data-val="Iztacalco"             onclick="selectOpt('alcaldia',this)">Iztacalco</div>
+    <div class="opt-pill" data-val="Iztapalapa"            onclick="selectOpt('alcaldia',this)">Iztapalapa</div>
+    <div class="opt-pill" data-val="La Magdalena Contreras" onclick="selectOpt('alcaldia',this)">Magdalena Contreras</div>
+    <div class="opt-pill" data-val="Miguel Hidalgo"        onclick="selectOpt('alcaldia',this)">Miguel Hidalgo</div>
+    <div class="opt-pill" data-val="Milpa Alta"            onclick="selectOpt('alcaldia',this)">Milpa Alta</div>
+    <div class="opt-pill" data-val="Tláhuac"               onclick="selectOpt('alcaldia',this)">Tláhuac</div>
+    <div class="opt-pill" data-val="Tlalpan"               onclick="selectOpt('alcaldia',this)">Tlalpan</div>
+    <div class="opt-pill" data-val="Venustiano Carranza"   onclick="selectOpt('alcaldia',this)">Venustiano Carranza</div>
+    <div class="opt-pill" data-val="Xochimilco"            onclick="selectOpt('alcaldia',this)">Xochimilco</div>
+  </div>
+
+  <div class="demo-inline-label" style="margin-top: 12px;">¿En qué colonia? <span>(opcional)</span></div>
+  <input
+    type="text"
+    id="colonia-input"
+    placeholder="Ej. Roma Norte, Narvarte, Pedregal…"
+    oninput="formData['colonia'] = this.value"
+    style="
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 999px;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    "
+    onfocus="this.style.borderColor='#6c63ff'"
+    onblur="this.style.borderColor='#e0e0e0'"
+  />
+</div>
 
   <div class="tracks-list" id="tracks-list"></div>
 
